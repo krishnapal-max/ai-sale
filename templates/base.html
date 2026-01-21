@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Sales Assistance Agent - Intelligent Lead Management & Scoring System">
+    <meta name="keywords" content="AI, Sales, Lead Management, CRM, Sales Agent">
+    <meta name="author" content="AI Sales Agent">
+    <title>{% if title %}{{ title }} | AI Sales Agent{% else %}AI Sales Agent - Smart Sales Automation{% endif %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <!-- Logo -->
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Kaok Logo" style="width: 40px; height: auto;">
+                </div>
+                <div class="logo-text">
+                    <h1>AI Sales</h1>
+                    <p>Agent</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                            <span class="nav-icon">📊</span>
+                            <span class="nav-label">Dashboard</span>
+                            <span class="nav-indicator"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('leads.index') }}" class="nav-link {% if request.endpoint.startswith('leads') %}active{% endif %}">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-label">Leads</span>
+                            <span class="nav-indicator"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('notifications.index') }}" class="nav-link {% if request.endpoint.startswith('notifications') %}active{% endif %}">
+                            <span class="nav-icon">🔔</span>
+                            <span class="nav-label">Notifications</span>
+                            {% if notification_count and notification_count > 0 %}
+                            <span class="badge badge-danger">{{ notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- Sidebar Footer Stats -->
+            <div class="sidebar-footer">
+                <div class="footer-stat">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-info">
+                        <div class="stat-label">User</div>
+                        <div class="stat-value" style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ g.user.username if g.logged_in else 'Guest' }}</div>
+                    </div>
+                </div>
+                <div class="footer-stat">
+                    <div class="stat-icon">🔑</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Role</div>
+                        <div class="stat-value" style="font-size: 0.75rem; white-space: nowrap; text-transform: capitalize;">{{ g.user.role if g.logged_in else 'N/A' }}</div>
+                    </div>
+                </div>
+                {% if g.logged_in %}
+                <a href="{{ url_for('auth.logout') }}" class="nav-link" style="margin-top: 12px; border-left: 3px solid transparent; padding: 10px 24px; color: #ef4444;">
+                    <span style="font-size: 1rem;">🚪</span>
+                    <span>Logout</span>
+                </a>
+                {% endif %}
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">☰</button>
+                    <h2 class="page-subtitle">{% block page_subtitle %}Dashboard{% endblock %}</h2>
+                </div>
+                <div class="top-bar-right">
+                    <div class="top-bar-item">
+                        <span class="current-time" id="current-time"></span>
+                    </div>
+                    <div class="top-bar-item">
+                        <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
+                    </div>
+                    {% if g.logged_in %}
+                    <div class="top-bar-item" style="display: flex; align-items: center; gap: 12px; padding: 0 12px; border-left: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">👤</span>
+                            <span style="color: var(--text-secondary); font-weight: 500;">{{ g.user.username }}</span>
+                        </div>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-btn" style="background: #ef4444; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; transition: all 0.2s ease; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">🚪 Logout</a>
+                    </div>
+                    {% else %}
+                    <div class="top-bar-item">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm" style="padding: 8px 14px; font-size: 0.9rem;">🔐 Login</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Alert Container -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible">
+                    <div class="alert-icon">
+                        {% if category == 'success' %}✓
+                        {% elif category == 'error' %}✕
+                        {% elif category == 'warning' %}⚠
+                        {% else %}ℹ{% endif %}
+                    </div>
+                    <div class="alert-content">{{ message }}</div>
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Clock Update -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('current-time').textContent = dateStr + ' ' + timeStr;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+    
+    <!-- Additional scripts per page -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

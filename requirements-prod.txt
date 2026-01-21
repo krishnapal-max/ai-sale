@@ -1,0 +1,20 @@
+# AI Sales Assistance Agent - Production Dependencies
+
+# Web Framework
+Flask==3.0.0
+gunicorn==21.2.0
+
+# Database
+Flask-SQLAlchemy==3.1.1
+
+# Machine Learning
+scikit-learn==1.3.2
+pandas==2.1.3
+numpy==1.26.2
+
+# Data handling
+python-dateutil==2.8.2
+
+# Production
+werkzeug==3.0.1
+python-dotenv==1.0.0

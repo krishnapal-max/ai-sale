@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block page_subtitle %}{% if lead %}✏️ Edit Lead{% else %}➕ Add New Lead{% endif %}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">Lead Management</p>
+    </div>
+    <a href="{{ url_for('leads.index') }}" class="btn btn-secondary btn-sm">
+        ← Back to Leads
+    </a>
+</div>
+
+<!-- Lead Form -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Lead Information</h2>
+    </div>
+    
+    <form id="lead-form" method="POST" action="">
+        <div class="grid-2">
+            <!-- Basic Information -->
+            <div>
+                <h3 style="margin-bottom: 16px; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase;">Basic Information</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           value="{{ lead.name if lead else '' }}" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           value="{{ lead.email if lead else '' }}" required placeholder="john@company.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           value="{{ lead.phone if lead else '' }}" placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="company">Company Name</label>
+                    <input type="text" id="company" name="company" class="form-control" 
+                           value="{{ lead.company if lead else '' }}" placeholder="Acme Corporation">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="job_title">Job Title</label>
+                    <input type="text" id="job_title" name="job_title" class="form-control" 
+                           value="{{ lead.job_title if lead else '' }}" placeholder="CEO, Manager, etc.">
+                </div>
+            </div>
+            
+            <!-- AI Scoring Factors -->
+            <div>
+                <h3 style="margin-bottom: 16px; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase;">AI Scoring Factors</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="source">Lead Source</label>
+                    <select id="source" name="source" class="form-control">
+                        <option value="website" {% if lead and lead.source == 'website' %}selected{% endif %}>🌐 Website</option>
+                        <option value="referral" {% if lead and lead.source == 'referral' %}selected{% endif %}>👥 Referral</option>
+                        <option value="cold_call" {% if lead and lead.source == 'cold_call' %}selected{% endif %}>📞 Cold Call</option>
+                        <option value="linkedin" {% if lead and lead.source == 'linkedin' %}selected{% endif %}>💼 LinkedIn</option>
+                        <option value="advertisement" {% if lead and lead.source == 'advertisement' %}selected{% endif %}>📢 Advertisement</option>
+                        <option value="other" {% if lead and lead.source == 'other' %}selected{% endif %}>📋 Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="company_size">Company Size</label>
+                    <select id="company_size" name="company_size" class="form-control">
+                        <option value="small" {% if lead and lead.company_size == 'small' %}selected{% endif %}>🏢 Small (1-50)</option>
+                        <option value="medium" {% if lead and lead.company_size == 'medium' %}selected{% endif %}>🏬 Medium (51-500)</option>
+                        <option value="large" {% if lead and lead.company_size == 'large' %}selected{% endif %}>🏗️ Large (500+)</option>
+                        <option value="enterprise" {% if lead and lead.company_size == 'enterprise' %}selected{% endif %}>🏢 Enterprise</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="engagement_level">Engagement Level (1-5)</label>
+                    <select id="engagement_level" name="engagement_level" class="form-control">
+                        <option value="1" {% if lead and lead.engagement_level == 1 %}selected{% endif %}>⭐ - Very Low (1)</option>
+                        <option value="2" {% if lead and lead.engagement_level == 2 %}selected{% endif %}>⭐⭐ - Low (2)</option>
+                        <option value="3" {% if lead and lead.engagement_level == 3 %}selected{% endif %}>⭐⭐⭐ - Medium (3)</option>
+                        <option value="4" {% if lead and lead.engagement_level == 4 %}selected{% endif %}>⭐⭐⭐⭐ - High (4)</option>
+                        <option value="5" {% if lead and lead.engagement_level == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ - Very High (5)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="budget_range">Budget Range</label>
+                    <select id="budget_range" name="budget_range" class="form-control">
+                        <option value="unknown" {% if lead and lead.budget_range == 'unknown' %}selected{% endif %}>❓ Unknown</option>
+                        <option value="low" {% if lead and lead.budget_range == 'low' %}selected{% endif %}>💵 Low</option>
+                        <option value="medium" {% if lead and lead.budget_range == 'medium' %}selected{% endif %}>💰 Medium</option>
+                        <option value="high" {% if lead and lead.budget_range == 'high' %}selected{% endif %}>💎 High</option>
+                        <option value="enterprise" {% if lead and lead.budget_range == 'enterprise' %}selected{% endif %}>🏢 Enterprise</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="timeline">Purchase Timeline</label>
+                    <select id="timeline" name="timeline" class="form-control">
+                        <option value="unknown" {% if lead and lead.timeline == 'unknown' %}selected{% endif %}>❓ Unknown</option>
+                        <option value="immediate" {% if lead and lead.timeline == 'immediate' %}selected{% endif %}>🚀 Immediate</option>
+                        <option value="short_term" {% if lead and lead.timeline == 'short_term' %}selected{% endif %}>📅 Short Term (1-3 months)</option>
+                        <option value="long_term" {% if lead and lead.timeline == 'long_term' %}selected{% endif %}>📆 Long Term (3+ months)</option>
+                    </select>
+                </div>
+                
+                {% if lead %}
+                <div class="form-group">
+                    <label class="form-label" for="status">Lead Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="new" {% if lead.status == 'new' %}selected{% endif %}>🆕 New</option>
+                        <option value="qualified" {% if lead.status == 'qualified' %}selected{% endif %}>✅ Qualified</option>
+                        <option value="converted" {% if lead.status == 'converted' %}selected{% endif %}>🎉 Converted</option>
+                        <option value="lost" {% if lead.status == 'lost' %}selected{% endif %}>❌ Lost</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- AI Score Preview -->
+        {% if lead %}
+        <div style="margin-top: 24px; padding: 20px; background: var(--bg-color); border-radius: var(--radius);">
+            <h4 style="margin-bottom: 12px;">🤖 AI Analysis</h4>
+            {% set text_color = 'var(--danger-color)' if lead.ai_score >= 70 else 'var(--warning-color)' if lead.ai_score >= 40 else 'var(--success-color)' %}
+            {% set priority_class = 'high' if lead.ai_score >= 70 else 'medium' if lead.ai_score >= 40 else 'low' %}
+            {% set priority_text = '🔥 High Priority' if lead.ai_score >= 70 else '⚡ Medium Priority' if lead.ai_score >= 40 else '📉 Low Priority' %}
+            <div style="display: flex; gap: 24px; align-items: center;">
+                <div>
+                    <span class="score-badge score-{{ priority_class }}" style="font-size: 3rem; font-weight: 700;">
+                        {{ lead.ai_score }}
+                    </span>
+                    <span style="color: var(--text-secondary);">/ 100</span>
+                </div>
+                <div>
+                    <div class="priority-badge priority-{{ priority_class }}">
+                        {{ priority_text }}
+                    </div>
+                    <div style="margin-top: 8px; color: var(--text-secondary);">
+                        <strong>Recommended Action:</strong> {{ lead.recommended_action or 'Pending analysis' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Submit Button -->
+        <div style="margin-top: 24px; display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-primary">
+                {% if lead %}💾 Update Lead{% else %}➕ Add Lead{% endif %}
+            </button>
+            <a href="{{ url_for('leads.index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- AI Scoring Info -->
+<div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+    <div class="card-header">
+        <h2 class="card-title">🧠 How to Improve Lead Score</h2>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div style="padding: 12px;">
+            <h4 style="color: var(--primary-color);">📢 Source Matters</h4>
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">Referrals typically convert 3x better than cold leads</p>
+        </div>
+        <div style="padding: 12px;">
+            <h4 style="color: var(--primary-color);">🏢 Company Size</h4>
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">Larger companies often have bigger budgets</p>
+        </div>
+        <div style="padding: 12px;">
+            <h4 style="color: var(--primary-color);">📈 Engagement</h4>
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">Higher engagement indicates stronger interest</p>
+        </div>
+        <div style="padding: 12px;">
+            <h4 style="color: var(--primary-color);">⏰ Timeline</h4>
+            <p style="font-size: 0.875rem; color: var(--text-secondary);">Immediate buyers are most valuable</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

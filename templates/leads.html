@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block page_subtitle %}👥 Leads Management{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">👥 Lead Management</h1>
+    <div class="action-buttons">
+        <a href="{{ url_for('leads.add_lead') }}" class="btn btn-primary">
+            <span>➕</span> Add New Lead
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Filter by Priority</label>
+            <select class="form-control" onchange="filterLeadsByPriority(this.value)" style="min-width: 150px;">
+                <option value="all">All Priorities</option>
+                <option value="high">🔥 High (70+)</option>
+                <option value="medium">⚡ Medium (40-69)</option>
+                <option value="low">📉 Low (<40)</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Filter by Status</label>
+            <select class="form-control" onchange="filterLeadsByStatus(this.value)" style="min-width: 150px;">
+                <option value="all">All Status</option>
+                <option value="new">🆕 New</option>
+                <option value="qualified">✅ Qualified</option>
+                <option value="converted">🎉 Converted</option>
+                <option value="lost">❌ Lost</option>
+            </select>
+        </div>
+        
+        <div style="margin-left: auto;">
+            <button onclick="exportLeadsToCSV()" class="btn btn-secondary">
+                <span>📥</span> Export CSV
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Leads Table -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">All Leads ({{ leads|length }})</h2>
+        <a href="{{ url_for('leads.batch_score') }}" class="btn btn-secondary btn-sm">
+            <span>🔄</span> Re-score All
+        </a>
+    </div>
+    
+    {% if leads %}
+    <div class="table-container">
+        <table id="leads-table" class="data-table">
+            <thead>
+                <tr>
+                    <th data-sort="name">Name</th>
+                    <th data-sort="company">Company</th>
+                    <th data-sort="source">Source</th>
+                    <th data-sort="score">AI Score</th>
+                    <th data-sort="status">Status</th>
+                    <th>Recommended Action</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr data-status="{{ lead.status }}" data-priority="{% if lead.ai_score >= 70 %}high{% elif lead.ai_score >= 40 %}medium{% else %}low{% endif %}">
+                    <td>
+                        <strong>{{ lead.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ lead.email }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ lead.phone or '' }}</div>
+                    </td>
+                    <td>
+                        <div>{{ lead.company or '-' }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ lead.job_title or '' }}</div>
+                    </td>
+                    <td>
+                        <span class="priority-badge priority-{% if lead.source == 'referral' %}high{% else %}low{% endif %}">
+                            {{ lead.source }}
+                        </span>
+                    </td>
+                    <td data-column="score">
+                        <span id="score-{{ lead.id }}" class="score-badge score-{% if lead.ai_score >= 70 %}high{% elif lead.ai_score >= 40 %}medium{% else %}low{% endif %}">
+                            {{ lead.ai_score }}
+                        </span>
+                    </td>
+                    <td data-column="status">
+                        <span class="status-badge status-{{ lead.status }}">
+                            {{ lead.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div id="recommendation-{{ lead.id }}" class="recommendation-action">
+                            {% if lead.recommended_action %}
+                            <span>🎯</span> {{ lead.recommended_action }}
+                            {% else %}
+                            <span style="color: var(--text-secondary);">Pending analysis...</span>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+                            {{ lead.timeline }} | {{ lead.budget_range }} budget
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('leads.edit_lead', id=lead.id) }}" class="btn btn-secondary btn-sm" title="Edit">
+                                ✏️
+                            </a>
+                            <button onclick="rescoreLead('{{ lead.id }}')" class="btn btn-secondary btn-sm" title="Re-score with AI">
+                                🤖
+                            </button>
+                            <a href="{{ url_for('leads.update_status', id=lead.id, status='qualified') }}" class="btn btn-success btn-sm" title="Mark Qualified">
+                                ✅
+                            </a>
+                            <a href="{{ url_for('leads.delete_lead', id=lead.id) }}" class="btn btn-danger btn-sm btn-delete" title="Delete">
+                                🗑️
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <p class="empty-state-title">No leads yet</p>
+        <p>Start by adding your first lead to the system</p>
+        <a href="{{ url_for('leads.add_lead') }}" class="btn btn-primary mt-4">Add First Lead</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- AI Scoring Info -->
+<div class="card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+    <div class="card-header">
+        <h2 class="card-title">🤖 How AI Scoring Works</h2>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">📢</div>
+            <h4 style="margin-bottom: 4px;">Lead Source</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Referrals score highest, followed by website and LinkedIn</p>
+        </div>
+        
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🏢</div>
+            <h4 style="margin-bottom: 4px;">Company Size</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Enterprise and large companies indicate higher value</p>
+        </div>
+        
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">📈</div>
+            <h4 style="margin-bottom: 4px;">Engagement Level</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Higher engagement = higher conversion probability</p>
+        </div>
+        
+        <div style="text-align: center; padding: 16px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">💰</div>
+            <h4 style="margin-bottom: 4px;">Budget & Timeline</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Known budgets and immediate timelines boost scores</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
