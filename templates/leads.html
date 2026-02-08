@@ -38,6 +38,9 @@
         </div>
         
         <div style="margin-left: auto;">
+            <button onclick="importLeadsFromCSV()" class="btn btn-primary">
+                <span>📤</span> Import CSV
+            </button>
             <button onclick="exportLeadsToCSV()" class="btn btn-secondary">
                 <span>📥</span> Export CSV
             </button>
@@ -70,7 +73,7 @@
             </thead>
             <tbody>
                 {% for lead in leads %}
-                <tr data-status="{{ lead.status }}" data-priority="{% if lead.ai_score >= 70 %}high{% elif lead.ai_score >= 40 %}medium{% else %}low{% endif %}">
+                <tr data-status="{{ lead.status }}" data-priority="{% if lead.ai_score >= 70 %}high{% elif lead.ai_score >= 40 %}medium{% else %}low{% endif %}" data-name="{{ lead.name }}" data-email="{{ lead.email }}" data-company="{{ lead.company or '' }}" data-score="{{ lead.ai_score }}" data-source="{{ lead.source }}" data-phone="{{ lead.phone or '' }}" data-job-title="{{ lead.job_title or '' }}" data-company-size="{{ lead.company_size }}" data-engagement-level="{{ lead.engagement_level }}" data-budget-range="{{ lead.budget_range }}" data-timeline="{{ lead.timeline }}">
                     <td>
                         <strong>{{ lead.name }}</strong>
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ lead.email }}</div>

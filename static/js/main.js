@@ -447,36 +447,80 @@ function filterLeadsByPriority(priority) {
 function exportLeadsToCSV() {
     const leads = [];
     const rows = document.querySelectorAll('#leads-table tbody tr');
-    
+
     rows.forEach(row => {
         const lead = {
             name: row.dataset.name,
             email: row.dataset.email,
             company: row.dataset.company,
-            score: row.dataset.score,
+            phone: row.dataset.phone,
+            job_title: row.dataset.jobTitle,
+            source: row.dataset.source,
+            company_size: row.dataset.companySize,
+            engagement_level: row.dataset.engagementLevel,
+            budget_range: row.dataset.budgetRange,
+            timeline: row.dataset.timeline,
+            ai_score: row.dataset.score,
             status: row.dataset.status
         };
         leads.push(lead);
     });
-    
+
     if (leads.length === 0) {
         showAlert('No leads to export', 'warning');
         return;
     }
-    
+
     const headers = Object.keys(leads[0]);
     const csvContent = [
         headers.join(','),
         ...leads.map(lead => headers.map(h => `"${lead[h] || ''}"`).join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `leads_export_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    
+
     showAlert('Leads exported successfully', 'success');
+}
+
+/**
+ * Import leads from CSV
+ */
+function importLeadsFromCSV() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showAlert('Importing leads...', 'info');
+
+            fetch('/leads/import-csv', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(`Successfully imported ${data.imported_count} leads`, 'success');
+                    location.reload();
+                } else {
+                    showAlert(data.message || 'Import failed', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error importing CSV:', error);
+                showAlert('Error importing CSV file', 'error');
+            });
+        }
+    };
+    input.click();
 }
 
 /**
@@ -538,6 +582,7 @@ window.rescoreLead = rescoreLead;
 window.filterLeadsByStatus = filterLeadsByStatus;
 window.filterLeadsByPriority = filterLeadsByPriority;
 window.exportLeadsToCSV = exportLeadsToCSV;
+window.importLeadsFromCSV = importLeadsFromCSV;
 window.batchAction = batchAction;
 window.markNotificationRead = markNotificationRead;
 window.markAllNotificationsRead = markAllNotificationsRead;
